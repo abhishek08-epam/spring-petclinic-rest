@@ -4,6 +4,7 @@ import org.jspecify.annotations.NonNull;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.springframework.data.domain.Page;
+import org.springframework.samples.petclinic.dto.PetRecord;
 import org.springframework.samples.petclinic.model.Pet;
 import org.springframework.samples.petclinic.model.PetType;
 import org.springframework.samples.petclinic.rest.dto.PetDto;
@@ -33,6 +34,12 @@ public interface PetMapper {
     @Mapping(target = "owner", ignore = true)
     @Mapping(target = "visits", ignore = true)
     Pet toPet(PetFieldsDto petFieldsDto);
+
+    @Mapping(source = "owner.id", target = "ownerId")
+    PetRecord toPetRecord(Pet pet);
+
+    @Mapping(source = "ownerId", target = "owner.id")
+    Pet toPet(PetRecord petRecord);
 
     PetTypeDto toPetTypeDto(PetType petType);
 

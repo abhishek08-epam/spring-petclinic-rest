@@ -2,6 +2,7 @@ package org.springframework.samples.petclinic.mapper;
 
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.springframework.samples.petclinic.dto.VisitRecord;
 import org.springframework.samples.petclinic.model.Visit;
 import org.springframework.samples.petclinic.rest.dto.VisitDto;
 import org.springframework.samples.petclinic.rest.dto.VisitFieldsDto;
@@ -24,5 +25,11 @@ public interface VisitMapper {
     VisitDto toVisitDto(Visit visit);
 
     Collection<VisitDto> toVisitsDto(Collection<Visit> visits);
+
+    @Mapping(source = "petId", target = "pet.id")
+    Visit toVisit(VisitRecord visitRecord);
+
+    @Mapping(source = "pet.id", target = "petId")
+    VisitRecord toVisitRecord(Visit visit);
 
 }
