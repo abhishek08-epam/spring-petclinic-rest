@@ -17,9 +17,12 @@
 package org.springframework.samples.petclinic.rest.controller;
 
 import org.springframework.samples.petclinic.rest.controller.v1.VisitRestControllerV1;
+import org.springframework.samples.petclinic.rest.dto.VisitDto;
 import tools.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
@@ -43,8 +46,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Test class for {@link VisitRestControllerV1}
@@ -184,6 +189,55 @@ class VisitRestControllerV1Tests {
         		.content(newVisitAsJSON).accept(MediaType.APPLICATION_JSON_VALUE).contentType(MediaType.APPLICATION_JSON_VALUE))
         		.andExpect(status().isBadRequest());
      }
+
+    @ParameterizedTest
+    @CsvSource({
+        "2020-01-01",
+        "2025-12-31"
+    })
+    @WithMockUser(roles="OWNER_ADMIN")
+    void testCreateVisitWithPastDateReturnsBadRequest(String date) throws Exception {
+        Pet pet = visits.get(0).getPet();
+        when(this.clinicService.findPetById(pet.getId())).thenReturn(pet);
+
+        VisitDto visitDto = visitMapper.toVisitDto(visits.get(0));
+        visitDto.setDate(LocalDate.parse(date));
+        String requestBody = new ObjectMapper().writeValueAsString(visitDto);
+
+        int status = this.mockMvc.perform(post("/api/visits")
+                .content(requestBody)
+                .accept(MediaType.APPLICATION_JSON)
+                .contentType(MediaType.APPLICATION_JSON))
+            .andReturn()
+            .getResponse()
+            .getStatus();
+
+        assertThat(status).isEqualTo(400);
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+        "2020-01-01",
+        "2025-12-31"
+    })
+    @WithMockUser(roles="OWNER_ADMIN")
+    void testUpdateVisitWithPastDateReturnsBadRequest(String date) throws Exception {
+        when(this.clinicService.findVisitById(2)).thenReturn(visits.get(0));
+
+        VisitDto visitDto = visitMapper.toVisitDto(visits.get(0));
+        visitDto.setDate(LocalDate.parse(date));
+        String requestBody = new ObjectMapper().writeValueAsString(visitDto);
+
+        int status = this.mockMvc.perform(put("/api/visits/2")
+                .content(requestBody)
+                .accept(MediaType.APPLICATION_JSON)
+                .contentType(MediaType.APPLICATION_JSON))
+            .andReturn()
+            .getResponse()
+            .getStatus();
+
+        assertThat(status).isEqualTo(400);
+    }
 
     @Test
     @WithMockUser(roles="OWNER_ADMIN")

@@ -21,6 +21,8 @@ import org.springframework.samples.petclinic.rest.controller.v1.OwnerRestControl
 import tools.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
@@ -52,6 +54,8 @@ import java.util.List;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.when;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -527,6 +531,34 @@ class OwnerRestControllerV1Tests {
         this.mockMvc.perform(post("/api/owners/1/pets/1/visits")
                 .content(newVisitAsJSON).accept(MediaType.APPLICATION_JSON_VALUE).contentType(MediaType.APPLICATION_JSON_VALUE))
             .andExpect(status().isCreated());
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+        "2020-01-01",
+        "2025-12-31"
+    })
+    @WithMockUser(roles = "OWNER_ADMIN")
+    void testCreateVisitForOwnerWithPastDateReturnsBadRequest(String date) throws Exception {
+        var owner = ownerMapper.toOwner(owners.get(0));
+        var pet = petMapper.toPet(pets.get(0));
+        pet.setOwner(owner);
+        when(this.clinicService.findPetById(pet.getId())).thenReturn(pet);
+
+        VisitDto visitDto = visits.get(0);
+        visitDto.setDate(LocalDate.parse(date));
+        ObjectMapper mapper = new ObjectMapper();
+        String newVisitAsJSON = mapper.writeValueAsString(visitMapper.toVisit(visitDto));
+
+        int status = this.mockMvc.perform(post("/api/owners/1/pets/" + pet.getId() + "/visits")
+                .content(newVisitAsJSON)
+                .accept(MediaType.APPLICATION_JSON_VALUE)
+                .contentType(MediaType.APPLICATION_JSON_VALUE))
+            .andReturn()
+            .getResponse()
+            .getStatus();
+
+        assertThat(status).isEqualTo(400);
     }
 
     @Test

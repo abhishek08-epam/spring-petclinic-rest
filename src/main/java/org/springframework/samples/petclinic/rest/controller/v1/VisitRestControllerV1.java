@@ -32,6 +32,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 import jakarta.transaction.Transactional;
 import java.util.ArrayList;
 import java.util.List;
+import java.time.LocalDate;
 
 /**
  * @author Vitaliy Fedoriv
@@ -75,6 +76,9 @@ public class VisitRestControllerV1 implements VisitsApi {
     @PreAuthorize("hasRole(@roles.OWNER_ADMIN)")
     @Override
     public ResponseEntity<VisitDto> addVisit(VisitDto visitDto) {
+        if (isPast(visitDto.getDate())) {
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
         HttpHeaders headers = new HttpHeaders();
         Visit visit = visitMapper.toVisit(visitDto);
         this.clinicService.saveVisit(visit);
@@ -86,6 +90,9 @@ public class VisitRestControllerV1 implements VisitsApi {
     @PreAuthorize("hasRole(@roles.OWNER_ADMIN)")
     @Override
     public ResponseEntity<VisitDto> updateVisit(Integer visitId, VisitFieldsDto visitDto) {
+        if (isPast(visitDto.getDate())) {
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
         Visit currentVisit = this.clinicService.findVisitById(visitId);
         if (currentVisit == null) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
@@ -94,6 +101,10 @@ public class VisitRestControllerV1 implements VisitsApi {
         currentVisit.setDescription(visitDto.getDescription());
         this.clinicService.saveVisit(currentVisit);
         return new ResponseEntity<>(visitMapper.toVisitDto(currentVisit), HttpStatus.NO_CONTENT);
+    }
+
+    private boolean isPast(LocalDate date) {
+        return date != null && date.isBefore(LocalDate.now());
     }
 
     @PreAuthorize("hasRole(@roles.OWNER_ADMIN)")
