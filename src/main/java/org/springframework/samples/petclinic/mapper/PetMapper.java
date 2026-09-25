@@ -4,10 +4,9 @@ import org.jspecify.annotations.NonNull;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.springframework.data.domain.Page;
-import org.springframework.samples.petclinic.dto.PetRecord;
+import org.springframework.samples.petclinic.dto.PetDto;
 import org.springframework.samples.petclinic.model.Pet;
 import org.springframework.samples.petclinic.model.PetType;
-import org.springframework.samples.petclinic.rest.dto.PetDto;
 import org.springframework.samples.petclinic.rest.dto.PetFieldsDto;
 import org.springframework.samples.petclinic.rest.dto.PetPageDto;
 import org.springframework.samples.petclinic.rest.dto.PetTypeDto;
@@ -21,14 +20,14 @@ import java.util.Collection;
 public interface PetMapper {
 
     @Mapping(source = "owner.id", target = "ownerId")
-    PetDto toPetDto(Pet pet);
+    org.springframework.samples.petclinic.rest.dto.PetDto toPetDto(Pet pet);
 
-    Collection<PetDto> toPetsDto(Collection<Pet> pets);
+    Collection<org.springframework.samples.petclinic.rest.dto.PetDto> toPetsDto(Collection<Pet> pets);
 
-    Collection<Pet> toPets(Collection<PetDto> pets);
+    Collection<Pet> toPets(Collection<org.springframework.samples.petclinic.rest.dto.PetDto> pets);
 
     @Mapping(source = "ownerId", target = "owner.id")
-    Pet toPet(PetDto petDto);
+    Pet toPet(org.springframework.samples.petclinic.rest.dto.PetDto petDto);
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "owner", ignore = true)
@@ -36,10 +35,10 @@ public interface PetMapper {
     Pet toPet(PetFieldsDto petFieldsDto);
 
     @Mapping(source = "owner.id", target = "ownerId")
-    PetRecord toPetRecord(Pet pet);
+    PetDto toPetRecord(Pet pet);
 
     @Mapping(source = "ownerId", target = "owner.id")
-    Pet toPet(PetRecord petRecord);
+    Pet toPet(PetDto petDto);
 
     PetTypeDto toPetTypeDto(PetType petType);
 

@@ -7,10 +7,10 @@ import java.util.Objects;
 import org.springframework.samples.petclinic.rest.dto.PetTypeDto;
 import org.springframework.samples.petclinic.rest.dto.VisitDto;
 
-public record PetRecord(String name, LocalDate birthDate, PetTypeDto type, Integer id, Integer ownerId,
-                        List<VisitDto> visits) {
+public record PetDto(String name, LocalDate birthDate, PetTypeDto type, Integer id, Integer ownerId,
+                     List<VisitDto> visits) {
 
-    public PetRecord {
+    public PetDto {
         name = Objects.requireNonNull(name, "name must not be null");
         if (name.isBlank()) {
             throw new IllegalArgumentException("name must not be blank");

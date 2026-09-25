@@ -3,9 +3,9 @@ package org.springframework.samples.petclinic.dto;
 import java.time.LocalDate;
 import java.util.Objects;
 
-public record VisitRecord(LocalDate date, String description, Integer id, Integer petId) {
+public record VisitDto(LocalDate date, String description, Integer id, Integer petId) {
 
-    public VisitRecord {
+    public VisitDto {
         date = Objects.requireNonNull(date, "date must not be null");
         description = Objects.requireNonNull(description, "description must not be null");
         if (description.isBlank()) {
