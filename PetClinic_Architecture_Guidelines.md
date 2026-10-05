@@ -1,0 +1,1 @@
+Primary keys must be Long; use Instant for timestamps; soft-delete with @SQLDelete
