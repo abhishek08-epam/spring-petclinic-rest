@@ -244,6 +244,15 @@ public class ClinicServiceImpl implements ClinicService {
 
     @Override
     @Transactional(readOnly = true)
+    public Collection<Owner> searchOwnersByLastName(String lastName) throws DataAccessException {
+        if (lastName == null || lastName.isBlank()) {
+            return List.of();
+        }
+        return ownerRepository.findByLastNameContainingIgnoreCase(lastName);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public Collection<Visit> findVisitsByPetId(int petId) {
         return visitRepository.findByPetId(petId);
     }

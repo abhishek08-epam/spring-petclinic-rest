@@ -111,6 +111,18 @@ public class JdbcOwnerRepositoryImpl implements OwnerRepository {
         return new PageImpl<>(owners, pageable, total == null ? 0 : total);
     }
 
+    @Override
+    public Collection<Owner> findByLastNameContainingIgnoreCase(String lastName) throws DataAccessException {
+        Map<String, Object> params = new HashMap<>();
+        params.put("lastName", "%" + lastName + "%");
+        List<Owner> owners = this.namedParameterJdbcTemplate.query(
+            "SELECT id, first_name, last_name, address, city, telephone FROM owners WHERE LOWER(last_name) LIKE LOWER(:lastName)",
+            params,
+            BeanPropertyRowMapper.newInstance(Owner.class)
+        );
+        return owners;
+    }
+
     /**
      * Loads the {@link Owner} with the supplied <code>id</code>; also loads the {@link Pet Pets} and {@link Visit Visits}
      * for the corresponding owner, if not already loaded.

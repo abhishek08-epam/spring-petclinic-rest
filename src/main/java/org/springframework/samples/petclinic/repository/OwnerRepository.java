@@ -48,6 +48,14 @@ public interface OwnerRepository {
     Page<Owner> findByLastName(String lastName, Pageable pageable) throws DataAccessException;
 
     /**
+     * Retrieve <code>Owner</code>s from the data store by last name containing the search term (case-insensitive).
+     *
+     * @param lastName Value to search for (partial match, case-insensitive)
+     * @return a <code>Collection</code> of matching <code>Owner</code>s (or an empty <code>Collection</code> if none found)
+     */
+    Collection<Owner> findByLastNameContainingIgnoreCase(String lastName) throws DataAccessException;
+
+    /**
      * Retrieve an <code>Owner</code> from the data store by id.
      *
      * @param id the id to search for

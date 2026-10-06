@@ -80,6 +80,14 @@ public class JpaOwnerRepositoryImpl implements OwnerRepository {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
+    public Collection<Owner> findByLastNameContainingIgnoreCase(String lastName) throws DataAccessException {
+        Query query = this.em.createQuery("SELECT DISTINCT owner FROM Owner owner WHERE LOWER(owner.lastName) LIKE LOWER(:lastName)");
+        query.setParameter("lastName", "%" + lastName + "%");
+        return query.getResultList();
+    }
+
+    @Override
     public Owner findById(int id) {
         // using 'join fetch' because a single query should load both owners and pets
         // using 'left join fetch' because it might happen that an owner does not have pets yet

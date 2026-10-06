@@ -20,9 +20,16 @@ import java.time.LocalDate;
 import java.util.Collection;
 import java.util.List;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.constraints.NotBlank;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.samples.petclinic.dto.OwnerSearchResultDto;
 import org.springframework.samples.petclinic.mapper.OwnerMapper;
 import org.springframework.samples.petclinic.mapper.PetMapper;
 import org.springframework.samples.petclinic.mapper.VisitMapper;
@@ -38,9 +45,8 @@ import org.springframework.samples.petclinic.rest.dto.VisitDto;
 import org.springframework.samples.petclinic.rest.dto.VisitFieldsDto;
 import org.springframework.samples.petclinic.service.ClinicService;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import jakarta.transaction.Transactional;
@@ -52,6 +58,8 @@ import jakarta.transaction.Transactional;
 @RestController
 @CrossOrigin(exposedHeaders = "errors, content-type")
 @RequestMapping("/api")
+@Validated
+@Tag(name = "owners", description = "Endpoints related to pet owners")
 public class OwnerRestControllerV1 implements OwnersApi {
 
     private final ClinicService clinicService;
@@ -85,6 +93,38 @@ public class OwnerRestControllerV1 implements OwnersApi {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
         return new ResponseEntity<>(ownerMapper.toOwnerDtoCollection(owners), HttpStatus.OK);
+    }
+
+    @PreAuthorize("hasRole(@roles.OWNER_ADMIN)")
+    @GetMapping("/owners/search")
+    @Operation(
+        summary = "Search owners by last name",
+        description = "Returns owners whose last name contains the search term (case-insensitive, partial match)"
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Owners found and returned"),
+        @ApiResponse(responseCode = "400", description = "Invalid search parameter"),
+        @ApiResponse(responseCode = "404", description = "No owners found")
+    })
+    public ResponseEntity<List<OwnerSearchResultDto>> searchOwners(
+        @Parameter(description = "Last name search term (partial match, case-insensitive)", required = true)
+        @RequestParam @NotBlank String lastName
+    ) {
+        Collection<Owner> owners = this.clinicService.searchOwnersByLastName(lastName);
+        if (owners.isEmpty()) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+        List<OwnerSearchResultDto> results = owners.stream()
+            .map(owner -> new OwnerSearchResultDto(
+                owner.getId(),
+                owner.getFirstName(),
+                owner.getLastName(),
+                owner.getAddress(),
+                owner.getCity(),
+                owner.getTelephone()
+            ))
+            .toList();
+        return new ResponseEntity<>(results, HttpStatus.OK);
     }
 
     @PreAuthorize("hasRole(@roles.OWNER_ADMIN)")
