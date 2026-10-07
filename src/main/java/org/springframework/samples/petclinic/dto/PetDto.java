@@ -1,6 +1,7 @@
 package org.springframework.samples.petclinic.dto;
 
 import java.time.LocalDate;
+import java.time.Period;
 import java.util.List;
 import java.util.Objects;
 
@@ -31,5 +32,9 @@ public record PetDto(String name, LocalDate birthDate, PetTypeDto type, Integer 
             throw new IllegalArgumentException("ownerId must not be negative");
         }
         visits = List.copyOf(visits == null ? List.of() : visits);
+    }
+
+    public int ageInYears() {
+        return Period.between(birthDate, LocalDate.now()).getYears();
     }
 }
