@@ -34,6 +34,10 @@ public record PetDto(String name, LocalDate birthDate, PetTypeDto type, Integer 
         visits = List.copyOf(visits == null ? List.of() : visits);
     }
 
+    /**
+     * Calculates the pet's age in complete years from its birth date.
+     * @return the age in years
+     */
     public int ageInYears() {
         return Period.between(birthDate, LocalDate.now()).getYears();
     }
