@@ -70,13 +70,25 @@ public class EmergencyConsultationService {
     }
 
     private Pet findPetById(Long petId) {
-        return petRepository.findById(petId)
-            .orElseThrow(() -> new ResourceNotFoundException("Pet not found with id: " + petId));
+        if (petId == null || petId <= 0 || petId > Integer.MAX_VALUE) {
+            throw new ResourceNotFoundException("Pet not found with id: " + petId);
+        }
+        Pet pet = petRepository.findById(petId.intValue());
+        if (pet == null) {
+            throw new ResourceNotFoundException("Pet not found with id: " + petId);
+        }
+        return pet;
     }
 
     private Vet findVetById(Long vetId) {
-        return vetRepository.findById(vetId)
-            .orElseThrow(() -> new ResourceNotFoundException("Vet not found with id: " + vetId));
+        if (vetId == null || vetId <= 0 || vetId > Integer.MAX_VALUE) {
+            throw new ResourceNotFoundException("Vet not found with id: " + vetId);
+        }
+        Vet vet = vetRepository.findById(vetId.intValue());
+        if (vet == null) {
+            throw new ResourceNotFoundException("Vet not found with id: " + vetId);
+        }
+        return vet;
     }
 
     private void validatePetOwnership(Pet pet, String authenticatedUsername) {
@@ -142,10 +154,10 @@ public class EmergencyConsultationService {
             Vet vet) {
 
         return new EmergencyConsultationConfirmationDto(
-            consultation.getId(),
-            pet.getId(),
+            consultation.getId().longValue(),
+            pet.getId().longValue(),
             pet.getName(),
-            vet.getId(),
+            vet.getId().longValue(),
             vet.getFirstName() + " " + vet.getLastName(),
             consultation.getScheduledTime(),
             consultation.getSeverity(),

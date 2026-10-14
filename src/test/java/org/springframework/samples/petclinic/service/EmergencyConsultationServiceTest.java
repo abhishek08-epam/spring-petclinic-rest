@@ -18,7 +18,6 @@ import org.springframework.samples.petclinic.rest.exception.UnauthorizedPetAcces
 
 import java.time.Instant;
 import java.util.List;
-import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
@@ -56,8 +55,8 @@ class EmergencyConsultationServiceTest {
         vet.setFirstName("Sam");
         vet.setLastName("Vet");
 
-        when(petRepository.findById(1L)).thenReturn(Optional.of(pet));
-        when(vetRepository.findById(2L)).thenReturn(Optional.of(vet));
+        when(petRepository.findById(1)).thenReturn(pet);
+        when(vetRepository.findById(2)).thenReturn(vet);
         when(ownerRepository.findByLastName("owner1")).thenReturn(List.of(owner));
         when(emergencyConsultationRepository.existsByVetIdAndScheduledTime(2L, scheduled)).thenReturn(false);
 
@@ -79,7 +78,7 @@ class EmergencyConsultationServiceTest {
         assertEquals(1L, dto.petId());
         assertEquals(2L, dto.vetId());
         assertEquals(scheduled, dto.scheduledTime());
-        assertTrue(dto.bookingId() > 0);
+        assertEquals(10L, dto.bookingId());
         assertNotNull(dto.confirmedAt());
     }
 
@@ -87,7 +86,7 @@ class EmergencyConsultationServiceTest {
     @DisplayName("Service throws 404-like exception when pet not found")
     void bookEmergencyConsultation_petNotFound_throwsResourceNotFound() {
         Instant scheduled = Instant.now().plusSeconds(3600);
-        when(petRepository.findById(1L)).thenReturn(Optional.empty());
+        when(petRepository.findById(1)).thenReturn(null);
 
         assertThrows(ResourceNotFoundException.class, () -> service.bookEmergencyConsultation(
             new EmergencyConsultationRequestDto(1L, 2L, scheduled, SymptomSeverity.MILD, "symptoms"),
@@ -107,8 +106,8 @@ class EmergencyConsultationServiceTest {
         pet.setOwner(owner);
         owner.addPet(pet);
 
-        when(petRepository.findById(1L)).thenReturn(Optional.of(pet));
-        when(vetRepository.findById(2L)).thenReturn(Optional.empty());
+        when(petRepository.findById(1)).thenReturn(pet);
+        when(vetRepository.findById(2)).thenReturn(null);
 
         assertThrows(ResourceNotFoundException.class, () -> service.bookEmergencyConsultation(
             new EmergencyConsultationRequestDto(1L, 2L, scheduled, SymptomSeverity.MILD, "symptoms"),
@@ -131,8 +130,8 @@ class EmergencyConsultationServiceTest {
         Vet vet = new Vet();
         vet.setId(2);
 
-        when(petRepository.findById(1L)).thenReturn(Optional.of(pet));
-        when(vetRepository.findById(2L)).thenReturn(Optional.of(vet));
+        when(petRepository.findById(1)).thenReturn(pet);
+        when(vetRepository.findById(2)).thenReturn(vet);
 
         assertThrows(UnauthorizedPetAccessException.class, () -> service.bookEmergencyConsultation(
             new EmergencyConsultationRequestDto(1L, 2L, scheduled, SymptomSeverity.MILD, "symptoms"),
@@ -156,8 +155,8 @@ class EmergencyConsultationServiceTest {
         Vet vet = new Vet();
         vet.setId(2);
 
-        when(petRepository.findById(1L)).thenReturn(Optional.of(pet));
-        when(vetRepository.findById(2L)).thenReturn(Optional.of(vet));
+        when(petRepository.findById(1)).thenReturn(pet);
+        when(vetRepository.findById(2)).thenReturn(vet);
         when(ownerRepository.findByLastName("owner1")).thenReturn(List.of(new Owner()));
 
         assertThrows(UnauthorizedPetAccessException.class, () -> service.bookEmergencyConsultation(
@@ -181,8 +180,8 @@ class EmergencyConsultationServiceTest {
         Vet vet = new Vet();
         vet.setId(2);
 
-        when(petRepository.findById(1L)).thenReturn(Optional.of(pet));
-        when(vetRepository.findById(2L)).thenReturn(Optional.of(vet));
+        when(petRepository.findById(1)).thenReturn(pet);
+        when(vetRepository.findById(2)).thenReturn(vet);
         when(ownerRepository.findByLastName("owner1")).thenReturn(List.of(owner));
         when(emergencyConsultationRepository.existsByVetIdAndScheduledTime(2L, scheduled)).thenReturn(true);
 
@@ -209,8 +208,8 @@ class EmergencyConsultationServiceTest {
         Vet vet = new Vet();
         vet.setId(2);
 
-        when(petRepository.findById(1L)).thenReturn(Optional.of(pet));
-        when(vetRepository.findById(2L)).thenReturn(Optional.of(vet));
+        when(petRepository.findById(1)).thenReturn(pet);
+        when(vetRepository.findById(2)).thenReturn(vet);
         when(ownerRepository.findByLastName("owner1")).thenReturn(List.of(owner));
         when(emergencyConsultationRepository.existsByVetIdAndScheduledTime(2L, scheduled)).thenReturn(false);
         when(emergencyConsultationRepository.save(any(EmergencyConsultation.class)))
@@ -220,5 +219,32 @@ class EmergencyConsultationServiceTest {
             new EmergencyConsultationRequestDto(1L, 2L, scheduled, SymptomSeverity.MODERATE, "symptoms"),
             "owner1"
         ));
+    }
+
+    @Test
+    void bookEmergencyConsultation_outOfRangePetId_doesNotQueryRepository() {
+        long petId = (long) Integer.MAX_VALUE + 1;
+
+        assertThrows(ResourceNotFoundException.class, () -> service.bookEmergencyConsultation(
+            new EmergencyConsultationRequestDto(
+                petId, 2L, Instant.now().plusSeconds(3600), SymptomSeverity.MILD, "symptoms"),
+            "owner1"
+        ));
+
+        verifyNoInteractions(petRepository, vetRepository, emergencyConsultationRepository);
+    }
+
+    @Test
+    void bookEmergencyConsultation_outOfRangeVetId_doesNotQueryVetRepository() {
+        long vetId = (long) Integer.MAX_VALUE + 1;
+        when(petRepository.findById(1)).thenReturn(new Pet());
+
+        assertThrows(ResourceNotFoundException.class, () -> service.bookEmergencyConsultation(
+            new EmergencyConsultationRequestDto(
+                1L, vetId, Instant.now().plusSeconds(3600), SymptomSeverity.MILD, "symptoms"),
+            "owner1"
+        ));
+
+        verifyNoInteractions(vetRepository, emergencyConsultationRepository);
     }
 }

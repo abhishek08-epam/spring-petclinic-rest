@@ -1,17 +1,20 @@
 package org.springframework.samples.petclinic.rest.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
 import org.springframework.samples.petclinic.model.SymptomSeverity;
 import org.springframework.samples.petclinic.model.TriagePriority;
+import org.springframework.samples.petclinic.rest.advice.EmergencyConsultationExceptionHandler;
 import org.springframework.samples.petclinic.rest.dto.EmergencyConsultationConfirmationDto;
 import org.springframework.samples.petclinic.rest.dto.EmergencyConsultationRequestDto;
 import org.springframework.samples.petclinic.rest.exception.ResourceNotFoundException;
@@ -20,6 +23,7 @@ import org.springframework.samples.petclinic.rest.exception.UnauthorizedPetAcces
 import org.springframework.samples.petclinic.service.EmergencyConsultationService;
 import org.springframework.security.core.Authentication;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.time.Instant;
 import java.util.stream.Stream;
@@ -33,14 +37,22 @@ import static org.springframework.samples.petclinic.rest.assertions.EmergencyCon
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@WebMvcTest(controllers = EmergencyConsultationController.class)
+@ExtendWith(MockitoExtension.class)
 class EmergencyConsultationControllerMockMvcTest {
 
-    @Autowired MockMvc mockMvc;
-    @Autowired ObjectMapper objectMapper;
+    private MockMvc mockMvc;
+    private final ObjectMapper objectMapper = JsonMapper.builder().build();
 
-    @MockBean EmergencyConsultationService emergencyConsultationService;
-    @MockBean Authentication authentication;
+    @Mock EmergencyConsultationService emergencyConsultationService;
+    @Mock Authentication authentication;
+
+    @BeforeEach
+    void setUp() {
+        mockMvc = MockMvcBuilders.standaloneSetup(
+                new EmergencyConsultationController(emergencyConsultationService))
+            .setControllerAdvice(new EmergencyConsultationExceptionHandler())
+            .build();
+    }
 
     static Stream<SymptomSeverityCase> severityCases() {
         return Stream.of(

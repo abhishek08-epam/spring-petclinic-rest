@@ -33,6 +33,19 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 class DtoRecordTests {
 
     @Test
+    void ownerSearchResultRecordShouldExposeOwnerFields() {
+        OwnerSearchResultDto result = new OwnerSearchResultDto(
+            1, "George", "Franklin", "110 W. Liberty St.", "Madison", "6085551023");
+
+        assertThat(result.id()).isEqualTo(1);
+        assertThat(result.firstName()).isEqualTo("George");
+        assertThat(result.lastName()).isEqualTo("Franklin");
+        assertThat(result.address()).isEqualTo("110 W. Liberty St.");
+        assertThat(result.city()).isEqualTo("Madison");
+        assertThat(result.telephone()).isEqualTo("6085551023");
+    }
+
+    @Test
     void petRecordShouldCreateValidRecord() {
         LocalDate birthDate = LocalDate.now().minusYears(2);
         PetTypeDto type = petType();
